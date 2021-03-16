@@ -1,0 +1,35 @@
+{
+  "scripts": {
+  	"lint": "eslint . --ext js --fix",
+  	"dev-nested": "node examples/nested",
+  	"dev-flat": "node examples/flat"
+  },
+  "bugs": {
+    "url": "https://github.com/galvez/fastify-api/issues"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "A radically simple API routing and method injection library for Fastify",
+  "files": [
+    "index.js",
+    "reply.js",
+    "examples",
+    "README.md"
+  ],
+  "homepage": "https://github.com/galvez/fastify-api",
+  "license": "MIT",
+  "main": "index.js",
+  "name": "fastify-api",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/galvez/fastify-api.git"
+  },
+  "version": "0.0.1",
+  "devDependencies": {
+    "eslint": "^7.22.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.3.1"
+  }
+}
