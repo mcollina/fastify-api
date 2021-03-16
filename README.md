@@ -2,9 +2,9 @@
 
 A **radically simple** API **routing and method injection plugin** for [Fastify](https://fastify.io).
 
-Think of it as a lightweight version of [`light-my-request`](https://github.com/fastify/light-my-request) with _developer ergonomics_ in mind.
+Uses [`fastify.inject`](https://github.com/fastify/light-my-request) under the hood, with _developer ergonomics_ in mind.
 
-Inject `fastify.api` with automatically mapped methods from route definitions, with one caveat:
+Injects `fastify.api` with automatically mapped methods from route definitions, with **one caveat**:
 
 You can only use **named functions** for your handlers, so it can infer their `name`.
 
@@ -81,5 +81,3 @@ This would make the following methods available:
 ## Request and Response interoperability
 
 If you call a route handler via HTTP, it'll operate normally as if weren't using the plugin. If you use `fastify.api` to invoke it from another handler, you'll get an object containing `{ body, status, headers }` as response.
-
-Likewise, if you want to reuse route handlers this way, you **must** use `reply.send()`. And you can only really use `reply.code()` and `reply.header(key, value)` other than `reply.send()`. Inside hooks, you can use `reply.hijack()` as you normally would.

@@ -34,34 +34,24 @@ async function fastifyApi (fastify, options) {
       })
     }
     // eslint-disable-next-line prefer-const
-    wrapper = function (params, reqOptions) {
-      return new Promise((resolve, reject) => {
-        try {
-          const reqURL = applyParams(url, params)
-          if (!reqURL) {
-            throw new Error('Provided params don\'t match this API method\'s URL format')
-          }
-          const virtualReq = {
-            method: reqOptions.method || 'GET',
-            query: reqOptions.query,
-            headers: reqOptions.headders,
-            payload: reqOptions.body,
-            url: reqURL
-          }
-          fastify.inject(virtualReq, (err, res) => {
-            if (err) {
-              return reject(err)
-            }
-            resolve({
-              status: res.statusCode,
-              headers: res.headers,
-              body: res.payload
-            })
-          })
-        } catch (err) {
-          reject(err)
-        }
-      })
+    wrapper = async function (params, reqOptions) {
+      const reqURL = applyParams(url, params)
+      if (!reqURL) {
+        throw new Error('Provided params don\'t match this API method\'s URL format')
+      }
+      const virtualReq = {
+        method: reqOptions.method || 'GET',
+        query: reqOptions.query,
+        headers: reqOptions.headders,
+        payload: reqOptions.body,
+        url: reqURL
+      }
+      const res = await fastify.inject(virtualReq)
+      return {
+        status: res.statusCode,
+        headers: res.headers,
+        body: JSON.parse(res.payload)
+      }
     }
     return [handler.name, wrapper]
   }
