@@ -27,9 +27,9 @@ async function main () {
 
 The `fastify.api` decorator is a function that takes another function as parameter. This function takes a single parameter with an object containing `{ get, post, put, del }` for defining routes.
 
-So in the example above you can see it destructuring only `get` and defining an `/echo/:id` route. Also notice how the function returns an array of calls. This array is used to determine the structure of the `fastify.api` injection. So if you return an array, it understands it should register all available functions as top-level methods under `fastify.api`.
+So in the example above you can see it destructuring only `get` and defining an `/echo/:id` route. Also notice how the function returns an array of calls. This array is used to determine the structure of the `fastify.api` injection.
 
-This way you can invoke them on-the-fly as:
+So if you return an array, it understands it should register all available functions as top-level methods under `fastify.api`. This way you can invoke them on-the-fly as:
 
 ```js
 fastify.get('/invoke-echo', async (req, reply) => {
