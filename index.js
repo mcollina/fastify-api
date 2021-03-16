@@ -1,6 +1,5 @@
 
 const fp = require('fastify-plugin')
-const { VirtualReply } = require('./reply')
 const { assign } = Object
 
 async function fastifyApi (fastify, options) {
@@ -27,77 +26,40 @@ async function fastifyApi (fastify, options) {
     if (!handler) {
       handler = options
       fastify[method](url, function (req, reply) {
-        try {
-          return wrapper.call(this, req.params, req, reply)
-        } catch (err) {
-          console.error(err)
-          throw err
-        }
+        return handler.call(this, req.params, req, reply)
       })
     } else {
       fastify[method](url, options, function (req, reply) {
-        try {
-          return wrapper.call(this, req.params, req, reply)
-        } catch (err) {
-          console.error(err)
-          throw err
-        }
+        return handler.call(this, req.params, req, reply)
       })
     }
-    let onRequest
-    let preHandler
-    let onSend
-    let onResponse
-    if (options) {
-      onRequest = getHooks(options, 'onRequest')
-      preHandler = getHooks(options, 'preHandler')
-      onSend = getHooks(options, 'onSend')
-      onResponse = getHooks(options, 'onResponse')
-    }
-    wrapper = function (params, reqOverride, reply) {
-      // Here we actually need an async promise executor and we're doing it safely
-      //
-      // eslint-disable-next-line no-async-promise-executor
-      return new Promise(async (resolve, reject) => {
+    // eslint-disable-next-line prefer-const
+    wrapper = function (params, reqOptions) {
+      return new Promise((resolve, reject) => {
         try {
-          const virtualReq = reply
-            ? reqOverride
-            : assign(
-              getVirtualRequest(url, method),
-              reqOverride
-            )
-          const virtualReply = new VirtualReply(
-            virtualReq,
-            reply,
-            onSend,
-            onResponse,
-            resolve
-          )
-          if (!reply) {
-            if (onRequest) {
-              for (const hook of onRequest) {
-                if (!virtualReply.hijacked) {
-                  await hook(virtualReq, virtualReply)
-                }
-              }
-            }
-            if (preHandler) {
-              for (const hook of preHandler) {
-                if (!virtualReply.hijacked) {
-                  await hook(virtualReq, virtualReply)
-                }
-              }
-            }
+          const reqURL = applyParams(url, params)
+          if (!reqURL) {
+            throw new Error('Provided params don\'t match this API method\'s URL format')
           }
-          if (!virtualReply.hijacked) {
-            await handler(
-              params,
-              virtualReq,
-              virtualReply
-            )
+          const virtualReq = {
+            method: reqOptions.method || 'GET',
+            query: reqOptions.query,
+            headers: reqOptions.headders,
+            payload: reqOptions.body,
+            url: reqURL
           }
+          fastify.inject(virtualReq, (err, res) => {
+            if (err) {
+              console.error(err)
+              return reject(err)
+            }
+            resolve({
+              status: res.statusCode,
+              headers: res.headers,
+              body: res.payload
+            })
+          })
         } catch (err) {
-          console.error(err)
           reject(err)
         }
       })
@@ -110,6 +72,21 @@ async function fastifyApi (fastify, options) {
 
 module.exports = fp(fastifyApi)
 
+function applyParams (template, params) {
+  try {
+    return template.replace(/:(\w+)/, (_, m) => {
+      if (params[m]) {
+        return params[m]
+      } else {
+        // eslint-disable-next-line no-throw-literal
+        throw null
+      }
+    })
+  } catch (err) {
+    return null
+  }
+}
+
 function recursiveRegister (entries, result = {}, binder) {
   if (Array.isArray(entries)) {
     for (const [name, func] of entries) {
@@ -121,18 +98,4 @@ function recursiveRegister (entries, result = {}, binder) {
     }
   }
   return result
-}
-
-function getVirtualRequest (url, method) {
-  return {
-    url,
-    method: method.toUpperCase()
-  }
-}
-
-function getHooks (options, type) {
-  if (!options[type]) {
-    return
-  }
-  return Array.isArray(options[type]) ? options[type] : [options[type]]
 }

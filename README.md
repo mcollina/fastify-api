@@ -4,11 +4,9 @@ A **radically simple** API **routing and method injection plugin** for [Fastify]
 
 Think of it as a lightweight version of [`light-my-request`](https://github.com/fastify/light-my-request) with _developer ergonomics_ in mind.
 
-Inject `fastify.api` with automatically mapped methods from route definitions, with _some caveats_:
+Inject `fastify.api` with automatically mapped methods from route definitions, with one caveat:
 
-1. You can only use **named functions** for your handlers, so it can infer their `name`.
-2. You can only use **async functions** for your hooks, because it doesn't handle `done()` for simplicity.
-3. You can only use `onRequest`, `preHandler`, `onSend` and `onResponse` when invoking routes.
+You can only use **named functions** for your handlers, so it can infer their `name`.
 
 ## So how does it look like?
 

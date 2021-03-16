@@ -33,7 +33,6 @@ async function getServer () {
         'x-foobar': 2
       }
     })
-    console.log('result', result)
     reply.send(result)
   })
   fastify.get('/', (_, reply) => reply.send('ok'))
