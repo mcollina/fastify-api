@@ -44,7 +44,7 @@ Notice how the first parameter is mapped to `req.params` **for convenience**.
 
 ## Nested
 
-You can just return an object with nested arrays with route definition calls:
+You can also return an object with nested arrays with route definition calls:
 
 ```js
 const { content, session, users } = require('./handlers')
@@ -79,3 +79,9 @@ This would make the following methods available:
 - `fastify.api.users.profiles.update()`
 - `fastify.api.users.settings.get()`
 - `fastify.api.users.settings.update()`
+
+## Request and Response interoperability
+
+If you call a route handler via HTTP, it'll operate normally as if weren't using the plugin. If you use `fastify.api` to invoke it from another handler, you'll get an object containing `{ body, status, headers }` as response,
+
+Likewise, if you want to reuse route handlers this way, you **must** use `reply.send()`. And you can only really use `reply.code()` and `reply.header(key, value)` other than `reply.send()`. Inside hooks, you can use `reply.hijack()` as you normally would.

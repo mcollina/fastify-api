@@ -60,35 +60,42 @@ async function fastifyApi (fastify, options) {
       // eslint-disable-next-line no-async-promise-executor
       return new Promise(async (resolve, reject) => {
         try {
-          // If raw is available, it means the original
-          // Request object is being passed from a real HTTP route call
-          // In that case, just use the original Request object
-          const virtualReq = reqOverride.raw
+          const virtualReq = reply
             ? reqOverride
             : assign(
               getVirtualRequest(url, method),
               reqOverride
             )
-          // If the original Request object is missing,
-          // assume it's an internal API call so force-run
-          // all hooks originally assigned to the route
-          if (!reqOverride || !reqOverride.raw) {
+          const virtualReply = new VirtualReply(
+            virtualReq,
+            reply,
+            onSend,
+            onResponse,
+            resolve
+          )
+          if (!reply) {
             if (onRequest) {
               for (const hook of onRequest) {
-                await hook(virtualReq, this)
+                if (!virtualReply.hijacked) {
+                  await hook(virtualReq, virtualReply)
+                }
               }
             }
             if (preHandler) {
               for (const hook of preHandler) {
-                await hook(virtualReq, this)
+                if (!virtualReply.hijacked) {
+                  await hook(virtualReq, virtualReply)
+                }
               }
             }
           }
-          await handler(
-            params,
-            virtualReq,
-            new VirtualReply(virtualReq, reply, onSend, onResponse, resolve)
-          )
+          if (!virtualReply.hijacked) {
+            await handler(
+              params,
+              virtualReq,
+              virtualReply
+            )
+          }
         } catch (err) {
           console.error(err)
           reject(err)

@@ -7,6 +7,7 @@ const kResolve = Symbol('kResolve')
 
 class VirtualReply {
   constructor (virtualReq, reply, onSend, onResponse, resolve) {
+    this.hijacked = false
     this.headers = undefined
     this.status = undefined
     this[kVirtualReq] = virtualReq
@@ -30,6 +31,10 @@ class VirtualReply {
     } else {
       this.status = status
     }
+  }
+
+  hijack () {
+    this.hijacked = true
   }
 
   async send (body) {
