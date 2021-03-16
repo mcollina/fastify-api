@@ -82,6 +82,6 @@ This would make the following methods available:
 
 ## Request and Response interoperability
 
-If you call a route handler via HTTP, it'll operate normally as if weren't using the plugin. If you use `fastify.api` to invoke it from another handler, you'll get an object containing `{ body, status, headers }` as response,
+If you call a route handler via HTTP, it'll operate normally as if weren't using the plugin. If you use `fastify.api` to invoke it from another handler, you'll get an object containing `{ body, status, headers }` as response.
 
 Likewise, if you want to reuse route handlers this way, you **must** use `reply.send()`. And you can only really use `reply.code()` and `reply.header(key, value)` other than `reply.send()`. Inside hooks, you can use `reply.hijack()` as you normally would.
