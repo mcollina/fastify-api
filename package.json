@@ -1,7 +1,8 @@
 {
   "scripts": {
   	"lint": "eslint . --ext js --fix",
-  	"dev-nested": "node examples/nested",
+  	"dev-grouped": "node examples/grouped",
+    "dev-mixed": "node examples/mixed",
   	"dev-flat": "node examples/flat"
   },
   "bugs": {
@@ -23,7 +24,7 @@
     "type": "git",
     "url": "git+https://github.com/galvez/fastify-api.git"
   },
-  "version": "0.0.4",
+  "version": "0.0.5",
   "devDependencies": {
     "eslint": "^7.22.0",
     "eslint-config-standard": "^16.0.2",

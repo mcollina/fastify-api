@@ -4,79 +4,83 @@ A **radically simple** API **routing and method injection plugin** for [Fastify]
 
 Uses [`fastify.inject`](https://github.com/fastify/light-my-request) under the hood, with _developer ergonomics_ in mind.
 
-Injects `fastify.api` with automatically mapped methods from route definitions, with **one caveat**:
+Injects `fastify.api` with automatically mapped methods from route definitions.
 
-You can only use **named functions** for your handlers, so it can infer their `name`.
-
-## So how does it look like?
+## Basic usage
 
 ```js
-const fastify = require('fastify')()
-const fastifyApi = require('fastify-api')
-
-async function main () {
-  await fastify.register(fastifyApi)
-
-  fastify.api(({ get }) => [
-    get('/echo/:id', function echo ({ id }, req, reply) {
-      reply.code(201)
-      reply.send({ id, url: req.url })
-    }),
-  ])
-```
-
-The `fastify.api` decorator is a function that takes another function as parameter. This function takes a single parameter with an object containing `{ get, post, put, del }` for defining routes.
-
-So in the example above you can see it destructuring only `get` and defining an `/echo/:id` route. Also notice how the function returns an array of calls. This array is used to determine the structure of the `fastify.api` injection.
-
-So if you return an array, it understands it should register all available functions as top-level methods under `fastify.api`. This way you can invoke them on-the-fly as:
-
-```js
-fastify.get('/invoke-echo', async (req, reply) => {
-  const result = await fastify.api.echo({ id: 456 })
-  reply.send(result)
+fastify.api.get('/echo/:id', function echo ({ id }, req, reply) {
+  reply.code(201)
+  reply.send({ id, url: req.url })
 })
 ```
 
-Notice how the first parameter is mapped to `req.params` **for convenience**.
+In addition to registering the route as expected, this will also **automatically register an API client method** that lets you **make requests to this route as if you were calling a function**. 
 
-## Nested
+In other words, it's what `fastify.inject()` does out of the box (and makes things like [fastify-aws-lambda](https://github.com/fastify/aws-lambda-fastify) super fast too). But with the added convenience of a) receving `req.params` as the first parameter (if there are any) and b) using the function's name to register a method for it.
 
-You can also return an object with nested arrays with route definition calls:
+So for the definition above, where the handler is a _named function_ `echo()`, you'd get **`fastify.api.client.echo()`** automatically registered for you.
 
 ```js
-const { content, session, users } = require('./handlers')
+fastify.get('/some-other-endpoint', (req, reply) => {
+  const { body } = await fastify.api.client.echo({ id: 123 })
+  reply.send(body)
+})
+```
 
-fastify.api(({ get, put, del }) => ({
-  content: [
-    get('/content', content.get),
+## Grouped definitions
+
+You can also use `fastify.api` as a function that takes another function as parameter. This function takes a single parameter with an object containing `{ get, post, put, del }` for defining routes.
+
+This is particularly useful if you want to define your route handlers in external files, and just want to map all of them into their corresponding API methods and routes in one place:
+
+```js
+const { group, other } = require('./handlers')
+
+fastify.api(({ get }) => ({
+  group: [
+    get('/group/method1', group.method1),
+    get('/group/method2', group.method2),
   ],
-  session: [
-    get('/session/start', session.start),
-    del('/session/end', session.end),
-  ],
-  users: {
-    profiles: [
-      get('/users/start', users.profiles.get),
-      put('/users/end', users.profiles.update),
-    ],
-    setttings: [
-      get('/users/settings/', users.settings.get),
-      put('/users/settings/', users.settings.update),
-    ] 
+  other: [
+    get('/other/method1', other.method1),
+    get('/other/method2', other.method2),
+  ]
+})
+```
+
+This makes these methods available:
+
+- `fastify.api.client.group.method1({ id })`
+- `fastify.api.client.group.method2({ id })`
+- `fastify.api.client.other.method1({ param })`
+- `fastify.api.client.other.method2({ param })`
+
+Notice that above we just return an array to define API methodd at the same level.
+
+## Mixed definitions
+
+The idiom presented above has the limitation that you can't mix inner groups and methods at the same level, because you can't have a named property mixed within an array literal. But if you do want to have _groups and methods mixed at the same level_, you can also return an object!
+
+```js
+fastify.api(({ get }) => ({
+  mixed: {
+    method: get('/mixed/method/:id', (req, reply) => {}),
+    inner: [
+      get('/mixed/inner/method1/:param', function method1 (req, reply) {}),
+      get('/mixed/inner/method2/:param', function method2 (req, reply) {}),
+    ]
   }
 })
 ```
 
-This would make the following methods available:
+This makes these methods available:
 
-- `fastify.api.content.get()`
-- `fastify.api.session.start()`
-- `fastify.api.session.end()`
-- `fastify.api.users.profiles.get()`
-- `fastify.api.users.profiles.update()`
-- `fastify.api.users.settings.get()`
-- `fastify.api.users.settings.update()`
+- `fastify.api.client.mixed.method({ id })`
+- `fastify.api.client.mixed.inner.method1({ param })`
+- `fastify.api.client.mixed.inner.method2({ param })`
+
+Notice how for `method`, the function didn't have to be named because we are making a direct assignment there. If you do name the function, it would be ignored in this specific case.
 
 ## Request and Response interoperability
 

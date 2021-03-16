@@ -4,13 +4,11 @@ async function getServer () {
   await fastify.register(require('../index'))
 
   fastify.api(({ get }) => ({
-    top: [
-      get('/echo/:id', function echo ({ id }, req, reply) {
+    top: {
+      echo: get('/echo/:id', ({ id }, req, reply) => {
         reply.code(201)
         reply.send({ id, url: req.url })
-      })
-    ],
-    nested: {
+      }),
       inner: [
         get('/echo-with-onResponse-hook/:id', {
           async onResponse (req, reply) {
@@ -21,11 +19,14 @@ async function getServer () {
           reply.send({ id, url: req.url, requestHeaders: req.headers, requestQuery: req.query })
         })
       ]
-    }
+    },
+    other: get('/other/:id', function ({ id }, req, reply) {
+      reply.send({ id })
+    })
   }))
 
   fastify.get('/invoke-namespaced-echo', async (req, reply) => {
-    const result = await fastify.api.nested.inner.echoWithOnResponseHook({ id: 456 }, {
+    const result = await fastify.api.client.top.inner.echoWithOnResponseHook({ id: 456 }, {
       query: {
         foobar: 1
       },

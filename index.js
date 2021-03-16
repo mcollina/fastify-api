@@ -1,24 +1,24 @@
+'use strict'
 
 const fp = require('fastify-plugin')
 const { assign } = Object
 
 async function fastifyApi (fastify, options) {
+  const get = (...args) => registerMethod('get', ...args)
+  const post = (...args) => registerMethod('post', ...args)
+  const put = (...args) => registerMethod('put', ...args)
+  const del = (...args) => registerMethod('delete', ...args)
   const api = function (setter) {
-    const structure = setter({
-      get: (...args) => registerMethod('get', ...args),
-      post: (...args) => registerMethod('post', ...args),
-      put: (...args) => registerMethod('put', ...args),
-      del: (...args) => registerMethod('delete', ...args)
-    })
-    if (Array.isArray(structure)) {
-      for (const [name, func] of structure) {
-        api[name] = func.bind(fastify)
-      }
-    } else {
-      const binder = func => func.bind(fastify)
-      assign(api, recursiveRegister(structure, {}, binder))
-    }
+    const structure = setter({ get, post, put, del })
+    const binder = func => func.bind(fastify)
+    assign(api.client, recursiveRegister(structure, binder))
   }
+
+  api.client = {}
+  api.get = get
+  api.post = post
+  api.put = put
+  api.del = del
 
   function registerMethod (method, url, options, handler) {
     // eslint-disable-next-line prefer-const
@@ -53,13 +53,18 @@ async function fastifyApi (fastify, options) {
         body: JSON.parse(res.payload)
       }
     }
-    return [handler.name, wrapper]
+    return new APIFunction(handler.name, wrapper)
   }
 
   fastify.decorate(options.decorateAs || 'api', api)
 }
 
 module.exports = fp(fastifyApi)
+
+function APIFunction (name, func) {
+  this.name = name
+  this.func = func
+}
 
 function applyParams (template, params) {
   try {
@@ -76,14 +81,18 @@ function applyParams (template, params) {
   }
 }
 
-function recursiveRegister (entries, result = {}, binder) {
-  if (Array.isArray(entries)) {
-    for (const [name, func] of entries) {
-      result[name] = binder(func)
+function recursiveRegister (obj, binder, result = {}) {
+  if (Array.isArray(obj)) {
+    for (const namedFunc of obj) {
+      result[namedFunc.name] = binder(namedFunc.func)
     }
   } else {
-    for (const [name, def] of Object.entries(entries)) {
-      result[name] = recursiveRegister(def, {}, binder)
+    for (const p in obj) {
+      if (obj[p] instanceof APIFunction) {
+        result[obj[p].name || p] = obj[p].func
+      } else if (obj[p] && (Array.isArray(obj[p]) || typeof obj[p] === 'object')) {
+        result[p] = recursiveRegister(obj[p], binder)
+      }
     }
   }
   return result

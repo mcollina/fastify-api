@@ -19,7 +19,7 @@ async function getServer () {
   ])
 
   fastify.get('/invoke-echo', async (req, reply) => {
-    const result = await fastify.api.echo({ id: 456 }, {
+    const result = await fastify.api.client.echo({ id: 456 }, {
       query: {
         foobar: 1
       },
