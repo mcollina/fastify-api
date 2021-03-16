@@ -2,15 +2,13 @@
 
 A radically simple API routing and method injection plugin for Fastify.
 
-Inject `fastify.api` with automatically mapped methods from route definitions, with some caveats:
+Inject `fastify.api` with automatically mapped methods from route definitions, with _some caveats_:
 
 1. You can only use **named functions** for your handlers, so it can infer their `name`.
 2. You can only use **async functions** for your hooks, because it doesn't handle `done()` for simplicity.
-3. You can only use `onRequest`, `preHandler`, `onSend` and `onResponse` when invoking routes as internal API methods, the rationale being that `preValidation` and `preParsing` don't make sense for data you're providing yourself.
+3. You can only use `onRequest`, `preHandler`, `onSend` and `onResponse` when invoking routes.
 
-So how does it look like?
-
-## Usage
+## So how does it look like?
 
 ```js
 const fastify = require('fastify')()
