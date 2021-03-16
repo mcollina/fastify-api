@@ -1,6 +1,6 @@
 # fastify-api
 
-A radically simple API routing and method injection plugin for Fastify.
+A **radically simple** API **routing and method injection plugin** for [Fastify](https://fastify.io).
 
 Inject `fastify.api` with automatically mapped methods from route definitions, with _some caveats_:
 
