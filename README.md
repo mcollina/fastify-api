@@ -17,7 +17,7 @@ fastify.api.get('/echo/:id', function echo ({ id }, req, reply) {
 
 In addition to registering the route as expected, this will also **automatically register an API client method** that lets you **make requests to this route as if you were calling a function**. 
 
-In other words, it's what `fastify.inject()` does out of the box (and makes things like [fastify-aws-lambda](https://github.com/fastify/aws-lambda-fastify) super fast too). But with the added convenience of;
+In other words, it's what `fastify.inject()` does out of the box (and makes things like [fastify-aws-lambda](https://github.com/fastify/aws-lambda-fastify) super fast too). But with the added convenience of:
 
 - a) **receving `req.params` as the first parameter (if there are any)**
 - b) **using the function's name to register a method for it**
