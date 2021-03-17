@@ -129,7 +129,7 @@ function recursiveRegister (obj, binder, methods = {}, meta = {}) {
     for (const p in obj) {
       if (obj[p] instanceof APIMethod) {
         methods[obj[p].name || p] = obj[p].func
-        meta[obj[p].name || p] = obj[p].func
+        meta[obj[p].name || p] = obj[p].url
       } else if (obj[p] && (Array.isArray(obj[p]) || typeof obj[p] === 'object')) {
         const [_meta, _methods] = recursiveRegister(obj[p], binder)
         methods[p] = _methods
