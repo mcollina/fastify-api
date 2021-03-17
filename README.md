@@ -20,9 +20,9 @@ In addition to registering the route as expected, this will also **automatically
 In other words, it's what `fastify.inject()` does out of the box (and makes things like [fastify-aws-lambda](https://github.com/fastify/aws-lambda-fastify) super fast too). But with the added convenience of;
 
 - a) **receving `req.params` as the first parameter (if there are any)**
-- b) **using the function's name to register a method for it**. 
+- b) **using the function's name to register a method for it**
 
-If there are no params in your route URL, don't set a params first argument:
+If there are no params in your route URL, don't set a `params` first argument:
 
 ```js
 fastify.api.get('/simple', function simple (req, reply) {
@@ -32,12 +32,13 @@ fastify.api.get('/simple', function simple (req, reply) {
 ```
 
 
-So for the definition above, where the handler is a _named function_ `echo()`, you'd get **`fastify.api.client.echo()`** automatically registered for you.
+So for the definition above, where the handler is a _named function_ `simple()`, you'd get **`fastify.api.client.simple()`** automatically registered for you. Likewise for `echo()` earlier:
 
 ```js
 fastify.get('/some-other-endpoint', (req, reply) => {
-  const { json } = await fastify.api.client.echo({ id: 123 })
-  reply.send(json)
+  const { json: echoResponse } = await fastify.api.client.echo({ id: 123 })
+  const { json: simpleResponse } = await fastify.api.client.simple()
+  reply.send({ echoResponse, simpleResponse })
 })
 ```
 
