@@ -17,14 +17,22 @@ fastify.api.get('/echo/:id', function echo ({ id }, req, reply) {
 
 In addition to registering the route as expected, this will also **automatically register an API client method** that lets you **make requests to this route as if you were calling a function**. 
 
-In other words, it's what `fastify.inject()` does out of the box (and makes things like [fastify-aws-lambda](https://github.com/fastify/aws-lambda-fastify) super fast too). But with the added convenience of a) receving `req.params` as the first parameter (if there are any) and b) using the function's name to register a method for it.
+In other words, it's what `fastify.inject()` does out of the box (and makes things like [fastify-aws-lambda](https://github.com/fastify/aws-lambda-fastify) super fast too). But with the added convenience of a) **receving `req.params` as the first parameter (if there are any)** and b) **using the function's name to register a method for it**. If there are no params in your route URL, don't set a params first argument:
+
+```js
+fastify.api.get('/simple', function simple (req, reply) {
+  reply.code(201)
+  reply.send({ msg: 'hello world' })
+})
+```
+
 
 So for the definition above, where the handler is a _named function_ `echo()`, you'd get **`fastify.api.client.echo()`** automatically registered for you.
 
 ```js
 fastify.get('/some-other-endpoint', (req, reply) => {
-  const { body } = await fastify.api.client.echo({ id: 123 })
-  reply.send(body)
+  const { json } = await fastify.api.client.echo({ id: 123 })
+  reply.send(json)
 })
 ```
 
@@ -84,5 +92,5 @@ Notice how for `method`, the function didn't have to be named because we are mak
 
 ## API responses
 
-If you call a route via HTTP, it'll operate normally as if weren't using the plugin. If you use `fastify.api.client.xyz()` to invoke it from another handler, you'll get an object containing `{ body, status, headers }` as response.
+If you call a route via HTTP, it'll operate normally as if weren't using the plugin. If you use `fastify.api.client.xyz()` to invoke it from another handler, you'll get an object containing `{ json, body, status, headers }` as response. If it's unable to parse a JSON document out of `body`, `json` is undefined.
 

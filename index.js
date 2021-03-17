@@ -73,7 +73,7 @@ async function fastifyApi (fastify, options) {
         body: res.payload,
         get json () {
           return tryJSONParse(res.payload)
-        },
+        }
       }
     }
     return new APIFunction(handler.name, wrapper)
