@@ -13,11 +13,24 @@ async function fastifyApi (fastify, options) {
     const binder = func => func.bind(fastify)
     assign(api.client, recursiveRegister(structure, binder))
   }
+
   api.client = {}
-  api.get = get
-  api.post = post
-  api.put = put
-  api.del = del
+  api.get = (...args) => {
+    const namedFunction = get(...args)
+    api.client[namedFunction.name] = namedFunction.func
+  }
+  api.post = (...args) => {
+    const namedFunction = post(...args)
+    api.client[namedFunction.name] = namedFunction.func
+  }
+  api.put = (...args) => {
+    const namedFunction = put(...args)
+    api.client[namedFunction.name] = namedFunction.func
+  }
+  api.del = (...args) => {
+    const namedFunction = del(...args)
+    api.client[namedFunction.name] = namedFunction.func
+  }
 
   function registerMethod (method, url, options, handler) {
     // eslint-disable-next-line prefer-const

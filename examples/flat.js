@@ -3,10 +3,11 @@ async function getServer () {
   const fastify = require('fastify')()
   await fastify.register(require('../index'))
 
+  fastify.api.get('/simple', function simple (req, reply) {
+    reply.send('ok')
+  })
+
   fastify.api(({ get }) => [
-    get('/simple', function simple (req, reply) {
-      reply.send('ok')
-    }),
     get('/echo/:id', function echo ({ id }, req, reply) {
       reply.code(201)
       reply.send({ id, url: req.url })
