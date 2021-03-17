@@ -8,11 +8,11 @@ async function getServer () {
       reply.code(201)
       reply.send({ id, url: req.url })
     }),
-    get('/echo-with-onResponse-hook/:id', {
-      async onResponse (req, reply) {
-        console.log(`Running for onResponse for ${req.url}`)
+    get('/echo-with-onRequest-hook/:id', {
+      async onRequest (_, reply) {
+        reply.header('x-on-request', 'true')
       }
-    }, function echoWithOnResponseHook ({ id }, req, reply) {
+    }, function echoWithOnRequestHook ({ id }, req, reply) {
       reply.code(201)
       reply.send({ id, url: req.url, requestHeaders: req.headers, requestQuery: req.query })
     })
@@ -27,7 +27,6 @@ async function getServer () {
         'x-foobar': 2
       }
     })
-    console.log('result', result)
     reply.send(result)
   })
   fastify.get('/', (_, reply) => reply.send('ok'))

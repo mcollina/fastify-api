@@ -34,7 +34,7 @@ async function fastifyApi (fastify, options) {
       })
     }
     // eslint-disable-next-line prefer-const
-    wrapper = async function (params, reqOptions) {
+    wrapper = async function (params, reqOptions = {}) {
       const reqURL = applyParams(url, params)
       if (!reqURL) {
         throw new Error('Provided params don\'t match this API method\'s URL format')

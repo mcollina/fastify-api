@@ -56,7 +56,7 @@ This makes these methods available:
 - `fastify.api.client.other.method1({ param })`
 - `fastify.api.client.other.method2({ param })`
 
-Notice that above we just return an array to define API methodd at the same level.
+Notice that above we just return an array to define API methods at the same level.
 
 ## Mixed definitions
 
@@ -82,6 +82,7 @@ This makes these methods available:
 
 Notice how for `method`, the function didn't have to be named because we are making a direct assignment there. If you do name the function, it would be ignored in this specific case.
 
-## Request and Response interoperability
+## API responses
 
-If you call a route handler via HTTP, it'll operate normally as if weren't using the plugin. If you use `fastify.api` to invoke it from another handler, you'll get an object containing `{ body, status, headers }` as response.
+If you call a route via HTTP, it'll operate normally as if weren't using the plugin. If you use `fastify.api.client.xyz()` to invoke it from another handler, you'll get an object containing `{ body, status, headers }` as response.
+
