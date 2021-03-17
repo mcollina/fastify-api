@@ -13,7 +13,6 @@ async function fastifyApi (fastify, options) {
     const binder = func => func.bind(fastify)
     assign(api.client, recursiveRegister(structure, binder))
   }
-
   api.client = {}
   api.get = get
   api.post = post
@@ -23,21 +22,42 @@ async function fastifyApi (fastify, options) {
   function registerMethod (method, url, options, handler) {
     // eslint-disable-next-line prefer-const
     let wrapper
-    if (!handler) {
-      handler = options
-      fastify[method](url, function (req, reply) {
-        return handler.call(this, req.params, req, reply)
-      })
+    const hasParams = url.match(/\/:(\w+)/)
+    if (hasParams) {
+      if (!handler) {
+        handler = options
+        fastify[method](url, function (req, reply) {
+          return handler.call(this, req.params, req, reply)
+        })
+      } else {
+        fastify[method](url, options, function (req, reply) {
+          return handler.call(this, req.params, req, reply)
+        })
+      }
     } else {
-      fastify[method](url, options, function (req, reply) {
-        return handler.call(this, req.params, req, reply)
-      })
+      if (!handler) {
+        handler = options
+        fastify[method](url, function (req, reply) {
+          return handler.call(this, req, reply)
+        })
+      } else {
+        fastify[method](url, options, function (req, reply) {
+          return handler.call(this, req, reply)
+        })
+      }
     }
     // eslint-disable-next-line prefer-const
-    wrapper = async function (params, reqOptions = {}) {
-      const reqURL = applyParams(url, params)
-      if (!reqURL) {
-        throw new Error('Provided params don\'t match this API method\'s URL format')
+    wrapper = async function (...args) {
+      let reqURL = url
+      let reqOptions = {}
+      let params = {}
+      if (hasParams) {
+        reqOptions = args[1] || reqOptions
+        params = args[0]
+        reqURL = applyParams(url, params)
+        if (!reqURL) {
+          throw new Error('Provided params don\'t match this API method\'s URL format')
+        }
       }
       const virtualReq = {
         method: reqOptions.method || 'GET',
@@ -50,7 +70,10 @@ async function fastifyApi (fastify, options) {
       return {
         status: res.statusCode,
         headers: res.headers,
-        body: JSON.parse(res.payload)
+        body: res.payload,
+        get json () {
+          return tryJSONParse(res.payload)
+        },
       }
     }
     return new APIFunction(handler.name, wrapper)
@@ -96,4 +119,12 @@ function recursiveRegister (obj, binder, result = {}) {
     }
   }
   return result
+}
+
+function tryJSONParse (str) {
+  try {
+    return JSON.parse(str)
+  } catch (_) {
+    return undefined
+  }
 }
