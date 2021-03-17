@@ -14,6 +14,14 @@ getServer().then(async (fastify) => {
     t.ok(typeof fastify.api.client.echo === 'function')
     t.ok(typeof fastify.api.client.echoWithOnRequestHook === 'function')
   })
+  tap.test('should register API methods URL tree', (t) => {
+    t.plan(1)
+    t.strictSame(fastify.api.meta, {
+      simple: '/simple',
+      echo: '/echo/:id',
+      echoWithOnRequestHook: '/echo-with-onRequest-hook/:id'
+    })
+  })
   tap.test('show know when there are no params', async (t) => {
     t.plan(2)
     const simpleInject = await fastify.inject({ url: '/simple' })

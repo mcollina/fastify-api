@@ -8,29 +8,30 @@ async function fastifyApi (fastify, options) {
   const post = (...args) => registerMethod('post', ...args)
   const put = (...args) => registerMethod('put', ...args)
   const del = (...args) => registerMethod('delete', ...args)
+
   const api = function (setter) {
     const structure = setter({ get, post, put, del })
     const binder = func => func.bind(fastify)
-    assign(api.client, recursiveRegister(structure, binder))
+    const [methods, meta] = recursiveRegister(structure, binder)
+    assign(api.meta, meta)
+    assign(api.client, methods)
   }
 
+  api.meta = {}
   api.client = {}
-  api.get = (...args) => {
-    const namedFunction = get(...args)
-    api.client[namedFunction.name] = namedFunction.func
+
+  function topLeverSetter (setter) {
+    return (...args) => {
+      const method = setter(...args)
+      api.client[method.name] = method.func
+      api.meta[method.name] = method.url
+    }
   }
-  api.post = (...args) => {
-    const namedFunction = post(...args)
-    api.client[namedFunction.name] = namedFunction.func
-  }
-  api.put = (...args) => {
-    const namedFunction = put(...args)
-    api.client[namedFunction.name] = namedFunction.func
-  }
-  api.del = (...args) => {
-    const namedFunction = del(...args)
-    api.client[namedFunction.name] = namedFunction.func
-  }
+
+  api.get = topLeverSetter(get)
+  api.post = topLeverSetter(post)
+  api.put = topLeverSetter(put)
+  api.del = topLeverSetter(del)
 
   function registerMethod (method, url, options, handler) {
     // eslint-disable-next-line prefer-const
@@ -89,7 +90,7 @@ async function fastifyApi (fastify, options) {
         }
       }
     }
-    return new APIFunction(handler.name, wrapper)
+    return new APIMethod(handler.name, wrapper, url)
   }
 
   fastify.decorate(options.decorateAs || 'api', api)
@@ -97,9 +98,10 @@ async function fastifyApi (fastify, options) {
 
 module.exports = fp(fastifyApi)
 
-function APIFunction (name, func) {
+function APIMethod (name, func, url) {
   this.name = name
   this.func = func
+  this.url = url
 }
 
 function applyParams (template, params) {
@@ -117,21 +119,25 @@ function applyParams (template, params) {
   }
 }
 
-function recursiveRegister (obj, binder, result = {}) {
+function recursiveRegister (obj, binder, methods = {}, meta = {}) {
   if (Array.isArray(obj)) {
-    for (const namedFunc of obj) {
-      result[namedFunc.name] = binder(namedFunc.func)
+    for (const method of obj) {
+      methods[method.name] = binder(method.func)
+      meta[method.name] = method.url
     }
   } else {
     for (const p in obj) {
-      if (obj[p] instanceof APIFunction) {
-        result[obj[p].name || p] = obj[p].func
+      if (obj[p] instanceof APIMethod) {
+        methods[obj[p].name || p] = obj[p].func
+        meta[obj[p].name || p] = obj[p].func
       } else if (obj[p] && (Array.isArray(obj[p]) || typeof obj[p] === 'object')) {
-        result[p] = recursiveRegister(obj[p], binder)
+        const [_meta, _methods] = recursiveRegister(obj[p], binder)
+        methods[p] = _methods
+        meta[p] = _meta
       }
     }
   }
-  return result
+  return [methods, meta]
 }
 
 function tryJSONParse (str) {
