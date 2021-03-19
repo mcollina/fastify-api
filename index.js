@@ -24,7 +24,7 @@ async function fastifyApi (fastify, options) {
     return (...args) => {
       const method = setter(...args)
       api.client[method.name] = method.func
-      api.meta[method.name] = method.url
+      api.meta[method.name] = [method.method, method.url]
     }
   }
 
@@ -60,6 +60,7 @@ async function fastifyApi (fastify, options) {
         })
       }
     }
+    const ucMethod = method.toUpperCase()
     // eslint-disable-next-line prefer-const
     wrapper = async function (...args) {
       let reqURL = url
@@ -74,7 +75,7 @@ async function fastifyApi (fastify, options) {
         }
       }
       const virtualReq = {
-        method: reqOptions.method || 'GET',
+        method: ucMethod,
         query: reqOptions.query,
         headers: reqOptions.headders,
         payload: reqOptions.body,
@@ -90,7 +91,7 @@ async function fastifyApi (fastify, options) {
         }
       }
     }
-    return new APIMethod(handler.name, wrapper, url)
+    return new APIMethod(handler.name, wrapper, ucMethod, url)
   }
 
   fastify.decorate(options.decorateAs || 'api', api)
@@ -98,9 +99,10 @@ async function fastifyApi (fastify, options) {
 
 module.exports = fp(fastifyApi)
 
-function APIMethod (name, func, url) {
+function APIMethod (name, func, method, url) {
   this.name = name
   this.func = func
+  this.method = method
   this.url = url
 }
 
@@ -123,7 +125,7 @@ function recursiveRegister (obj, binder, methods = {}, meta = {}) {
   if (Array.isArray(obj)) {
     for (const method of obj) {
       methods[method.name] = binder(method.func)
-      meta[method.name] = method.url
+      meta[method.name] = [method.method, method.url]
     }
   } else {
     for (const p in obj) {

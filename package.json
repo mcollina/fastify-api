@@ -1,7 +1,7 @@
 {
   "scripts": {
     "lint": "eslint . --ext js --fix",
-    "test": "node test",
+    "test": "tap test",
     "dev-grouped": "node examples/grouped",
     "dev-mixed": "node examples/mixed",
     "dev-flat": "node examples/flat"
