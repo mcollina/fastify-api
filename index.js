@@ -108,7 +108,7 @@ function APIMethod (name, func, method, url) {
 
 function applyParams (template, params) {
   try {
-    return template.replace(/:(\w+)/, (_, m) => {
+    return template.replace(/:(\w+)/g, (_, m) => {
       if (params[m]) {
         return params[m]
       } else {
