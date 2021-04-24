@@ -1,6 +1,7 @@
 'use strict'
 
 const fp = require('fastify-plugin')
+const set = require('fast-path-set')
 const { assign } = Object
 
 async function fastifyApi (fastify, options) {
@@ -33,31 +34,35 @@ async function fastifyApi (fastify, options) {
   api.put = topLeverSetter(put)
   api.del = topLeverSetter(del)
 
-  function registerMethod (method, url, options, handler) {
+  function registerMethod (method, url, options, handler, returnWrapper = false) {
     // eslint-disable-next-line prefer-const
     let wrapper
     const hasParams = url.match(/\/:(\w+)/)
     if (hasParams) {
+      wrapper = function (req, reply) {
+        return handler.call(this, req.params, req, reply)
+      }
+      if (returnWrapper) {
+        return wrapper
+      }      
       if (!handler) {
         handler = options
-        fastify[method](url, function (req, reply) {
-          return handler.call(this, req.params, req, reply)
-        })
+        fastify[method](url, wrapper)
       } else {
-        fastify[method](url, options, function (req, reply) {
-          return handler.call(this, req.params, req, reply)
-        })
+        fastify[method](url, options, wrapper)
       }
     } else {
+      wrapper = function (req, reply) {
+        return handler.call(this, req, reply)
+      }
+      if (returnWrapper) {
+        return wrapper
+      }
       if (!handler) {
         handler = options
-        fastify[method](url, function (req, reply) {
-          return handler.call(this, req, reply)
-        })
+        fastify[method](url, wrapper)
       } else {
-        fastify[method](url, options, function (req, reply) {
-          return handler.call(this, req, reply)
-        })
+        fastify[method](url, options, wrapper)
       }
     }
     const ucMethod = method.toUpperCase()
@@ -94,13 +99,24 @@ async function fastifyApi (fastify, options) {
     return new APIMethod(handler.name, wrapper, ucMethod, url)
   }
 
+  function registerFromRegularRoute (route) {
+    if (!route.exposeAs) {
+      return
+    }
+    const { exposeAs } = route
+    const wrapper = registerMethod(null, route.url, route, route.handler, true)
+    set(api.client, exposeAs, wrapper)
+    set(api.meta, exposeAs, [route.method, route.url])
+  }
+
+  fastify.addHook('onRoute', registerFromRegularRoute)
   fastify.decorate(options.decorateAs || 'api', api)
 }
 
 module.exports = fp(fastifyApi)
 
 function APIMethod (name, func, method, url) {
-  this.name = name
+  this.name = name || null
   this.func = func
   this.method = method
   this.url = url
@@ -122,21 +138,14 @@ function applyParams (template, params) {
 }
 
 function recursiveRegister (obj, binder, methods = {}, meta = {}) {
-  if (Array.isArray(obj)) {
-    for (const method of obj) {
-      methods[method.name] = binder(method.func)
-      meta[method.name] = [method.method, method.url]
-    }
-  } else {
-    for (const p in obj) {
-      if (obj[p] instanceof APIMethod) {
-        methods[obj[p].name || p] = obj[p].func
-        meta[obj[p].name || p] = [obj[p].method, obj[p].url]
-      } else if (obj[p] && (Array.isArray(obj[p]) || typeof obj[p] === 'object')) {
-        const [_meta, _methods] = recursiveRegister(obj[p], binder)
-        methods[p] = _methods
-        meta[p] = _meta
-      }
+  for (const p in obj) {
+    if (obj[p] instanceof APIMethod) {
+      methods[obj[p].name || p] = obj[p].func
+      meta[obj[p].name || p] = [obj[p].method, obj[p].url]
+    } else if (obj[p] && typeof obj[p] === 'object') {
+      const [childMethods, childMeta] = recursiveRegister(obj[p], binder)
+      methods[p] = childMethods
+      meta[p] = childMeta
     }
   }
   return [methods, meta]
