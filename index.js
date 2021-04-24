@@ -44,7 +44,7 @@ async function fastifyApi (fastify, options) {
       }
       if (returnWrapper) {
         return wrapper
-      }      
+      }
       if (!handler) {
         handler = options
         fastify[method](url, wrapper)
