@@ -24,7 +24,7 @@ fastify.get('/invoke/1/method', async (_, reply) => {
 })
 ```
 
-2. **Original fastify.<method>() with `exposeAs` option, with params:**
+2. **Original fastify.{method}() with `exposeAs` option, with params:**
 
 ```js
 fastify.get('/2/method/:id', { exposeAs: 'methodWithParams' }, ({ id }, _, reply) => {
@@ -48,7 +48,7 @@ fastify.get('/invoke/3/nested/method', async (req, reply) => {
 })
 ```
 
-4. **Modified fastify.api.<method>() setter if the handler is a named function:**
+4. **Modified fastify.api.{method}() setter if the handler is a named function:**
 
 ```js
 fastify.api.get('/4/method', function methodFromNamedFunction ({ id }, _, reply) {
