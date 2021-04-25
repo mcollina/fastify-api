@@ -87,11 +87,13 @@ async function fastifyApi (fastify, options) {
         if (!reqURL) {
           throw new Error('Provided params don\'t match this API method\'s URL format')
         }
+      } else {
+        reqOptions = args[0] || reqOptions
       }
       const virtualReq = {
         method: ucMethod,
         query: reqOptions.query,
-        headers: reqOptions.headders,
+        headers: reqOptions.headers,
         payload: reqOptions.body,
         url: reqURL
       }
@@ -99,6 +101,7 @@ async function fastifyApi (fastify, options) {
       return {
         status: res.statusCode,
         headers: res.headers,
+        query: res.query,
         body: res.payload,
         get json () {
           return tryJSONParse(res.payload)

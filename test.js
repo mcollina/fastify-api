@@ -101,39 +101,14 @@ getServer().then(async (fastify) => {
   })
   tap.test('should capture additional options', async (t) => {
     t.plan(1)
-    const internal = await fastify.api.client.methodWithOptions({ id: 123 })
-    console.log('internal.json', internal.json)
-    t.strictSame(internal.json, {"id":"123"})
+    const internal = await fastify.api.client.methodWithOptions({
+      query: {
+        arg: 1
+      },
+      headers: {
+        'x-foobar': 1
+      }
+    })
+    t.equal(internal.body, 'Hello from /6/method/ with query.arg 1 and the x-foobar header 1')
   })
-  // tap.test('registered API routes should work when invoked', async (t) => {
-  //   t.plan(5)
-  //   const echo = await fastify.inject({ url: '/echo/123' })
-  //   t.strictEqual(echo.statusCode, 201)
-  //   t.strictSame(echo.body, JSON.stringify({ id: '123', url: '/echo/123' }))
-  //   const echoWithOnRequestHook = await fastify.inject({
-  //     url: '/echo-with-onRequest-hook/123',
-  //     query: {
-  //       foobar: 1
-  //     }
-  //   })
-  //   t.strictEqual(echoWithOnRequestHook.statusCode, 201)
-  //   t.strictSame(echoWithOnRequestHook.headers, {
-  //     'x-on-request': 'true',
-  //     'content-type': 'application/json; charset=utf-8',
-  //     'content-length': '160',
-  //     date: echoWithOnRequestHook.headers?.date,
-  //     connection: 'keep-alive'
-  //   })
-  //   t.strictSame(echoWithOnRequestHook.body, JSON.stringify({
-  //     id: '123',
-  //     url: '/echo-with-onRequest-hook/123?foobar=1',
-  //     requestHeaders: {
-  //       'user-agent': 'lightMyRequest',
-  //       host: 'localhost:80'
-  //     },
-  //     requestQuery: {
-  //       foobar: '1'
-  //     }
-  //   }))
-  // })
 })

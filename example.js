@@ -96,12 +96,14 @@ async function getServer () {
   // Any API method exposed in fastify.api.client can take options:
 
   fastify.get('/6/method', { exposeAs: 'methodWithOptions' }, (req, reply) => {
-    console.log(req.query)
-    console.log(req.headers)
-    reply.send('Hello from /6/method/ with query and headers')
+    reply.send(`Hello from /6/method/ with query.arg ${
+      req.query.arg
+    } and the x-foobar header ${
+      req.headers['x-foobar']
+    }`)
   })
   fastify.get('/invoke/6/method', async (_, reply) => {
-    const result = await fastify.api.client.methodWithOptions({ id: 123 }, {
+    const result = await fastify.api.client.methodWithOptions({
       query: {
         arg: 1
       },
