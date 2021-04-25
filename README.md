@@ -60,7 +60,7 @@ fastify.get('/invoke/4/method', async (req, reply) => {
 })
 ```
 
-5. **Modified fastify.api(setter) helper to quickly define multiple methods.**
+5. **Modified fastify.api(setter) helper to quickly define multiple methods:**
 
 _Makes more sense if the setter function is coming from another file._
 
