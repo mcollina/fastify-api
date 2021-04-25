@@ -72,23 +72,23 @@ async function getServer () {
     }
   }))
 
-  fastify.get('/invoke/5/top-level-method/:id', async ({ id }, _, reply) => {
+  fastify.get('/invoke/5/top-level-method', async (req, reply) => {
     const result = await fastify.api.client.topLevelMethod({ id: 123 })
     reply.send(result)
   })
-  fastify.get('/invoke/5/nested-methods/method/:id', async ({ id }, _, reply) => {
+  fastify.get('/invoke/5/nested-methods/method', async (_, reply) => {
     const result = await fastify.api.client.nestedMethods.method({ id: 123 })
     reply.send(result)
   })
-  fastify.get('/invoke/5/nested-methods/other-method/:id', async ({ id }, _, reply) => {
+  fastify.get('/invoke/5/nested-methods/other-method', async (_, reply) => {
     const result = await fastify.api.client.nestedMethods.otherMethod({ id: 123 })
     reply.send(result)
   })
-  fastify.get('/invoke/5/nested-methods/deeply-nested-methods/method/:id', async ({ id }, _, reply) => {
+  fastify.get('/invoke/5/nested-methods/deeply-nested-methods/method', async (_, reply) => {
     const result = await fastify.api.client.nestedMethods.deeplyNestedMethods.method({ id: 123 })
     reply.send(result)
   })
-  fastify.get('/invoke/5/nested-methods/deeply-nested-methods/other-method/:id', async ({ id }, req, reply) => {
+  fastify.get('/invoke/5/nested-methods/deeply-nested-methods/other-method', async (_, reply) => {
     const result = await fastify.api.client.nestedMethods.deeplyNestedMethods.otherMethod({ id: 123 })
     reply.send(result)
   })
@@ -96,7 +96,9 @@ async function getServer () {
   // Any API method exposed in fastify.api.client can take options:
 
   fastify.get('/6/method', { exposeAs: 'methodWithOptions' }, (req, reply) => {
-    reply.send(`Hello from /6/method/ with query ${req.query} and headers ${req.headers}`)
+    console.log(req.query)
+    console.log(req.headers)
+    reply.send('Hello from /6/method/ with query and headers')
   })
   fastify.get('/invoke/6/method', async (_, reply) => {
     const result = await fastify.api.client.methodWithOptions({ id: 123 }, {
