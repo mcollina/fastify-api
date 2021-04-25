@@ -24,7 +24,7 @@ fastify.get('/invoke/1/method', async (_, reply) => {
 })
 ```
 
-## **Original fastify.<method>() with `exposeAs` option, with params:**
+2. **Original fastify.<method>() with `exposeAs` option, with params:**
 
 ```js
 fastify.get('/2/method/:id', { exposeAs: 'methodWithParams' }, ({ id }, _, reply) => {
@@ -36,7 +36,7 @@ fastify.get('/invoke/2/method', async (req, reply) => {
 })
 ```
 
-## Will automatically create a nested structure too, if needed:
+3. **Will automatically create a nested structure too, if needed:**
 
 ```js
 fastify.get('/3/nested/method/:id', { exposeAs: 'nested.method' }, ({ id }, _, reply) => {
@@ -48,7 +48,7 @@ fastify.get('/invoke/3/nested/method', async (req, reply) => {
 })
 ```
 
-## Modified fastify.api.<method>() setter if the handler is a named function:
+4. **Modified fastify.api.<method>() setter if the handler is a named function:**
 
 ```js
 fastify.api.get('/4/method', function methodFromNamedFunction ({ id }, _, reply) {
@@ -60,7 +60,7 @@ fastify.get('/invoke/4/method', async (req, reply) => {
 })
 ```
 
-## Modified fastify.api(setter) helper to quickly define multiple methods.
+5. **Modified fastify.api(setter) helper to quickly define multiple methods.**
 
 _Makes more sense if the setter function is coming from another file._
 
@@ -109,7 +109,7 @@ fastify.get('/invoke/5/nested-methods/deeply-nested-methods/other-method', async
 })
 ```
 
-## Any API method exposed in fastify.api.client can take options:
+6. **Any API method exposed in fastify.api.client can take options:**
 
 ```js
 fastify.get('/6/method', { exposeAs: 'methodWithOptions' }, (req, reply) => {
