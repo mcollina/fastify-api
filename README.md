@@ -15,12 +15,8 @@ fastify.get('/1/method', { exposeAs: 'method' }, (_, reply) => {
   reply.send('Hello from /1/method')
 })
 fastify.get('/invoke/1/method', async (_, reply) => {
-  try {
-    const result = await fastify.api.client.method()
-    reply.send(result)
-  } catch (err) {
-    console.error(err)
-  }
+  const result = await fastify.api.client.method()
+  reply.send(result)
 })
 ```
 
