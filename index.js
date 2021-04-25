@@ -34,40 +34,49 @@ async function fastifyApi (fastify, options) {
   api.put = topLeverSetter(put)
   api.del = topLeverSetter(del)
 
-  function registerMethod (method, url, options, handler, returnWrapper = false) {
+  function registerMethod (method, url, options, handler, returnWrappers = false) {
     // eslint-disable-next-line prefer-const
+    let injector
     let wrapper
     const hasParams = url.match(/\/:(\w+)/)
     if (hasParams) {
-      wrapper = function (req, reply) {
-        return handler.call(this, req.params, req, reply)
-      }
-      if (returnWrapper) {
-        return wrapper
-      }
       if (!handler) {
         handler = options
-        fastify[method](url, wrapper)
+        wrapper = function (req, reply) {
+          return handler.call(this, req.params, req, reply)
+        }
+        if (!returnWrappers) {
+          fastify[method](url, wrapper)
+        }
       } else {
-        fastify[method](url, options, wrapper)
+        wrapper = function (req, reply) {
+          return handler.call(this, req.params, req, reply)
+        }
+        if (!returnWrappers) {
+          fastify[method](url, options, wrapper)
+        }
       }
     } else {
-      wrapper = function (req, reply) {
-        return handler.call(this, req, reply)
-      }
-      if (returnWrapper) {
-        return wrapper
-      }
       if (!handler) {
         handler = options
-        fastify[method](url, wrapper)
+        wrapper = function (req, reply) {
+          return handler.call(this, req, reply)
+        }
+        if (!returnWrappers) {
+          fastify[method](url, wrapper)
+        }
       } else {
-        fastify[method](url, options, wrapper)
+        wrapper = function (req, reply) {
+          return handler.call(this, req, reply)
+        }
+        if (!returnWrappers) {
+          fastify[method](url, options, wrapper)
+        }
       }
     }
     const ucMethod = method.toUpperCase()
     // eslint-disable-next-line prefer-const
-    wrapper = async function (...args) {
+    injector = async function (...args) {
       let reqURL = url
       let reqOptions = {}
       let params = {}
@@ -96,7 +105,12 @@ async function fastifyApi (fastify, options) {
         }
       }
     }
-    return new APIMethod(handler.name, wrapper, ucMethod, url)
+    const apiMethod = new APIMethod(handler.name, injector, ucMethod, url)
+    if (returnWrappers) {
+      return [wrapper, apiMethod]
+    } else {
+      return apiMethod
+    }
   }
 
   function registerFromRegularRoute (route) {
@@ -104,9 +118,12 @@ async function fastifyApi (fastify, options) {
       return
     }
     const { exposeAs } = route
-    const wrapper = registerMethod(null, route.url, route, route.handler, true)
-    set(api.client, exposeAs, wrapper)
-    set(api.meta, exposeAs, [route.method, route.url])
+    const lcMethod = route.method.toLowerCase()
+    const [wrapper, apiMethod] = registerMethod(lcMethod, route.url, route, route.handler, true)
+    set(api.client, exposeAs, apiMethod.func)
+    set(api.meta, exposeAs, [apiMethod.method, apiMethod.url])
+    route.handler = wrapper
+    return route
   }
 
   fastify.addHook('onRoute', registerFromRegularRoute)

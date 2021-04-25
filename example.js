@@ -6,11 +6,15 @@ async function getServer () {
   // Original fastify.{method}() with `exposeAs` option, without params:
 
   fastify.get('/1/method', { exposeAs: 'method' }, (_, reply) => {
-    reply.send('Hello from /1/method/')
+    reply.send('Hello from /1/method')
   })
   fastify.get('/invoke/1/method', async (_, reply) => {
-    const result = await fastify.api.client.method({ id: 123 })
-    reply.send(result)
+    try {
+      const result = await fastify.api.client.method()
+      reply.send(result)
+    } catch (err) {
+      console.error(err)
+    }
   })
 
   // Original fastify.<method>() with `exposeAs` option, with params:
