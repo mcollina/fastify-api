@@ -4,7 +4,7 @@ A **radically simple** API **routing and method injection plugin** for [Fastify]
 
 Uses [`fastify.inject`](https://github.com/fastify/light-my-request) under the hood, with _developer ergonomics_ in mind.
 
-Injects `fastify.api.client` with automatically mapped methods from route definitions.
+Injects `fastify.api.client` with automatically mapped methods from route definitions. Also injects `fastify.api.meta`, which you can serve and use [`manifetch`](https://github.com/galvez/manifetch) to automatically build an API client for the browser.
 
 ## Usage
 
