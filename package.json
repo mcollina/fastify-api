@@ -20,6 +20,7 @@
   "homepage": "https://github.com/galvez/fastify-api",
   "license": "MIT",
   "main": "index.js",
+  "type": "commonjs",
   "name": "fastify-api",
   "repository": {
     "type": "git",
