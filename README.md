@@ -1,6 +1,6 @@
 # fastify-api
 
-A **radically simple** API **routing and method injection plugin** for [Fastify](https://fastify.io).
+A **radically simple** API **routing and method injection plugin** for [Fastify](https://fastify.dev).
 
 Uses [`fastify.inject`](https://github.com/fastify/light-my-request) under the hood, with _developer ergonomics_ in mind.
 
